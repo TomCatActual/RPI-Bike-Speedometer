@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+        <script src="{{ url_for('static', filename='js/jquery-1.12.4.js') }}"></script>
+
+        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.12.0.min.js"><\/script>')</script>
+
+        <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/Chart.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/socket.io.js') }}"></script>
+
+        <script src="{{ url_for('static', filename='js/amcharts.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/gauge.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/black.js') }}"></script>
+
+          <script>
+          var chart2 = AmCharts.makeChart( "rpmgauge", {
+                    "theme": "light",
+                    "type": "gauge",
+                    "fontFamily": "GillSans-BoldItalic ",
+                    "fontSize": 18,
+                    "startDuration": 0,
+                    "axes": [ {
+                      "axisColor": "#ff9933",
+                      "axisThickness": 8,
+                      "endValue": 800,
+                      "gridInside": true,
+                      "inside": true,
+                      "radius": "101%",
+                      "valueInterval": 200,
+                      "bottomText": "0 RPM",
+                      "tickColor": "#502bf4",
+                      bands: [{
+                         startValue: 0,
+                         endValue: 400,
+                         innerRadius: "80%",
+                         color: "#00aaff"
+                        },
+                        {
+                         startValue: 400,
+                         endValue: 800,
+                         innerRadius: "70%",
+                         color: "#ff0000"
+                       }]
+
+                    }],
+                    "arrows": [ {
+                      "color": "#000000",
+                      "innerRadius": "10%",
+                      "nailRadius": 10,
+                      "radius": "95%"
+                    } ],
+                    "export": {
+                      "enabled": true
+                    }
+                  } );
+
+
+                  var chart = AmCharts.makeChart( "speedgauge", {
+                            "theme": "light",
+                            "type": "gauge",
+                            "fontFamily": "AvenirNext-HeavyItalic",
+                            "fontSize": 15,
+                            "startDuration": 0,
+                            "axes": [ {
+                              "axisColor": "#0066ff",
+                              "axisThickness": 8,
+                              "endValue": 120,
+                              "gridInside": true,
+                              "inside": true,
+                              "radius": "101%",
+                              "valueInterval": 20,
+                              "bottomText": "0 KM/h",
+                              "bottomTextYOffset": -10,
+                              "tickColor": "#502bf4",
+
+
+                          bands: [{
+                             startValue: 0,
+                             endValue: 60,
+                             innerRadius: "92%",
+                             color: "#73e600"
+                            },
+                            {
+                             startValue: 60,
+                             endValue: 80,
+                             innerRadius: "88%",
+                             color: "#ff9933"
+                            },
+
+                            {
+                              startValue: 80,
+                              endValue: 100,
+                              innerRadius: "84%",
+                              color: "#ff3300"
+                            },
+
+                              {
+                                startValue: 100,
+                                endValue: 120,
+                                innerRadius: "80%",
+                                color: "#b32400"
+                                }
+
+                          ]
+
+
+                            }],
+                            "arrows": [ {
+                              "color": "#000000",
+                              "innerRadius": "10%",
+                              "nailRadius": 10,
+                              "radius": "95%"
+                            } ],
+                            "export": {
+                              "enabled": true
+                            }
+                          } );
+                </script>
+
+
+    </head>
+    <body>
+        <!--[if lt IE 8]>
+            <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+        <!-- Add your site or application content here -->
+        <div class="jumbotron">
+          <div class="container">
+            <h1>SPEED + RPM Meter!</h1>
+            <h2>Python + JSON</h2>
+          </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+
+            <div class="col-md-4" id="speedgauge" style="width:280px; height:280px;"></div>
+            <div class="col-md-4" id="rpmgauge" style="width:280px; height:280px;"></div>
+            <!-- <div class="col-md-8" style="width:200px; height:200px;">
+              <h1>RPM: <span class="label label-warning" id='rpm'></h1>
+              <h1>KM/H: <span class="label label-danger" id='speed'></h1>
+              <h1>DISTANCE: <span class="label label-primary" id='distance'></h1>
+              <h1>ELAPSE: <span class="label label-primary" id='elapse'></h1>
+            </div> -->
+
+          </div>
+        </div>
+
+        <script>
+                  $(document).ready(function(){
+
+                  function updateThing(thingState){
+                    $('#distance').text(thingState.distance)
+                    $('#elapse').text(thingState.elapse.toFixed(4))
+
+                    $('#rpm').text(thingState.rpm.toFixed(4))
+                    $('#speed').text(thingState.speed.toFixed(4))
+
+                  };
+
+
+                  //set up switch server sent event endpoint !!! these are the final data ready to be sent
+                  var thingSource = new EventSource("{{ url_for('thing')}}");
+                  thingSource.onmessage = function(e) {
+                  var data = $.parseJSON(e.data);
+                  updateThing($.parseJSON(e.data));
+
+                  // var value = data.speed;
+                  // arrow.setValue(value);
+                  // axis.setBottomText(value.toFixed(0) + " km/h");
+
+                  var value = data.speed;
+                  var value2 = data.rpm;
+                  chart.arrows[ 0 ].setValue( value );
+                  chart.axes[ 0 ].setBottomText( value.toFixed(0) + " KM/h" );
+                  chart2.arrows[ 0 ].setValue( value2 );
+                  chart2.axes[ 0 ].setBottomText( value2.toFixed(0) + " RPM" );
+
+
+
+              };
+
+            });
+
+        </script>
+
+
+    </body>
+</html>
